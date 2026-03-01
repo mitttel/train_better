@@ -1,49 +1,64 @@
 <template>
-  <div>
+  <div class="profile-view">
     <BaseCard>
       <h2>Профиль</h2>
       <p class="subtitle">Персональные настройки приложения.</p>
 
       <div class="field">
         <label class="label" for="name">Имя</label>
-        <BaseInput id="name" v-model="profile.name" placeholder="Ваше имя" />
+        <BaseInput id="name" v-model="name" placeholder="Ваше имя" />
       </div>
 
       <div class="field">
         <span class="label">Единицы измерения</span>
         <div class="inline-options">
-          <label><input type="radio" value="kg" v-model="profile.units" /> кг</label>
-          <label><input type="radio" value="lb" v-model="profile.units" /> lb</label>
+          <label><input type="radio" :checked="useKg" @change="setUnit(true)" /> кг</label>
+          <label><input type="radio" :checked="!useKg" @change="setUnit(false)" /> lb</label>
         </div>
       </div>
 
       <div class="field">
-        <label class="label" for="restTimer">Таймер отдыха (сек.)</label>
-        <BaseInput id="restTimer" v-model="profile.restTimer" type="number" min="15" step="5" />
-      </div>
-
-      <div class="field">
-        <label class="label" for="warmupTimer">Таймер разминки (сек.)</label>
-        <BaseInput id="warmupTimer" v-model="profile.warmupTimer" type="number" min="30" step="10" />
+        <label class="label" for="restTimer">Таймер отдыха по умолчанию (сек.)</label>
+        <BaseInput
+          id="restTimer"
+          :model-value="defaultRestSec"
+          type="number"
+          min="15"
+          step="5"
+          @update:model-value="onDefaultRestChange"
+        />
       </div>
     </BaseCard>
   </div>
 </template>
 
 <script setup lang="ts">
-import { reactive } from 'vue'
+import { ref } from 'vue'
 import BaseCard from '../components/ui/BaseCard.vue'
 import BaseInput from '../components/ui/BaseInput.vue'
+import { useSettings } from '../composables/useSettings'
 
-const profile = reactive({
-  name: 'Атлет',
-  units: 'kg',
-  restTimer: 90,
-  warmupTimer: 300
-})
+const name = ref('Атлет')
+const { useKg, defaultRestSec } = useSettings()
+
+function setUnit(next: boolean) {
+  useKg.value = next
+}
+
+function onDefaultRestChange(value: string) {
+  const parsed = Number(value)
+  if (Number.isNaN(parsed)) return
+  defaultRestSec.value = parsed
+}
 </script>
 
 <style scoped>
+.profile-view {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 .subtitle {
   margin-bottom: 12px;
   opacity: 0.75;
@@ -62,5 +77,6 @@ const profile = reactive({
 .inline-options {
   display: flex;
   gap: 14px;
+  flex-wrap: wrap;
 }
 </style>

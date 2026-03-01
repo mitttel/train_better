@@ -24,7 +24,7 @@
 <style scoped>
 .bottom-nav {
   position: fixed;
-  bottom: 10px;
+  bottom: max(10px, env(safe-area-inset-bottom));
   left: 10px;
   right: 10px;
   display: flex;
@@ -57,7 +57,7 @@
 
 .nav-btn.router-link-exact-active {
   background: rgba(37, 99, 235, 0.12);
-  color: var(--primary);
+  color: var(--accent);
 }
 
 .nav-btn:active {
