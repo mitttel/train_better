@@ -1,6 +1,7 @@
 <template>
   <nav class="bottom-nav">
     <router-link to="/" class="nav-btn">Home</router-link>
+    <router-link to="/templates" class="nav-btn">Templates</router-link>
     <router-link to="/history" class="nav-btn">History</router-link>
     <router-link to="/stats" class="nav-btn">Stats</router-link>
     <router-link to="/settings" class="nav-btn">More</router-link>
@@ -28,6 +29,7 @@
   border-radius:10px;
   text-decoration:none;
   color:var(--text);
+  font-size: 12px;
 }
 .nav-btn.router-link-active {
   background: rgba(37,99,235,0.12);

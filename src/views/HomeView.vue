@@ -4,13 +4,16 @@
       <div class="today">
         <h2>Сегодня</h2>
         <p>{{ today }}</p>
-        <BaseButton @click="startToday">Начать тренировку</BaseButton>
+        <div class="actions">
+          <BaseButton @click="router.push('/templates')">Выбрать тренировку</BaseButton>
+          <BaseButton @click="router.push('/templates/new')">Добавить тренировку</BaseButton>
+        </div>
       </div>
     </BaseCard>
 
     <section style="margin-top:12px">
       <h3>Последние тренировки</h3>
-      <div v-if="store.workouts.length === 0">Пока нет тренировок — начните сегодня.</div>
+      <div v-if="store.workouts.length === 0">Пока нет тренировок — выберите шаблон.</div>
       <div v-else>
         <WorkoutCard v-for="w in store.workouts.slice(0,5)" :key="w.id" :workout="w" @open="open" />
       </div>
@@ -30,13 +33,11 @@ const store = useWorkoutStore()
 const router = useRouter()
 const today = formatHuman(todayIso())
 
-function startToday() {
-  const empty = store.createEmptyWorkout()
-  store.addWorkout(empty)
-  router.push({ name: 'Workout', params: { id: empty.id } })
-}
-
 function open(id: string) {
   router.push({ name: 'Workout', params: { id } })
 }
 </script>
+
+<style scoped>
+.actions { display:flex; gap:8px; flex-wrap:wrap; }
+</style>

@@ -18,6 +18,16 @@ const props = defineProps<{ exercise: Exercise }>()
 
 <style scoped>
 .exercise { margin-bottom:10px; }
-.title { display:flex; justify-content:space-between; align-items:center; gap:8px; }
-.sets { margin-top:6px; display:flex; gap:8px; flex-wrap:wrap; }
+.title {
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:4px;
+}
+.sets {
+  margin-top:6px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
 </style>

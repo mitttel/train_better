@@ -31,9 +31,7 @@ import BaseCard from '../components/ui/BaseCard.vue'
 import BaseButton from '../components/ui/BaseButton.vue'
 import BaseInput from '../components/ui/BaseInput.vue'
 import ExerciseItem from '../components/workout/ExerciseItem.vue'
-import { v4 as uuidv4 } from 'uuid' // note: if not installed, can use Date.now()
 
-// Fallback simple uuid if uuid package not installed:
 function uid() { return `${Date.now()}-${Math.floor(Math.random()*10000)}` }
 
 const route = useRoute()

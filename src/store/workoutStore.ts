@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { Workout } from '../types/workout'
+import type { WorkoutTemplate } from '../types/workoutTemplate'
 import { storage } from '../services/storageService'
 import { todayIso } from '../utils/date'
 
@@ -33,5 +34,22 @@ export const useWorkoutStore = defineStore('workout', () => {
         }
     }
 
-    return { workouts, addWorkout, updateWorkout, removeWorkout, createEmptyWorkout }
+    function createWorkoutFromTemplate(template: WorkoutTemplate): Workout {
+        return {
+            id: `${Date.now()}`,
+            date: todayIso(),
+            name: template.name,
+            exercises: [...template.exercises]
+                .sort((a, b) => a.order - b.order)
+                .map(exercise => ({
+                    id: `${Date.now()}-${Math.floor(Math.random() * 10000)}`,
+                    name: exercise.name,
+                    sets: [],
+                    measurementType: exercise.measurementType,
+                    notes: exercise.notes
+                }))
+        }
+    }
+
+    return { workouts, addWorkout, updateWorkout, removeWorkout, createEmptyWorkout, createWorkoutFromTemplate }
 })
