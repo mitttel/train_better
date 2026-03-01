@@ -23,13 +23,13 @@
 
 <style scoped>
 .bottom-nav {
-  position: fixed;
-  bottom: 10px;
-  left: 10px;
-  right: 10px;
+  position: sticky;
+  bottom: 0;
+  z-index: 20;
   display: flex;
   justify-content: space-around;
   gap: 6px;
+  margin: 0 10px calc(env(safe-area-inset-bottom, 0px) + 10px);
   background: var(--card);
   padding: 8px;
   border-radius: 16px;
@@ -57,7 +57,7 @@
 
 .nav-btn.router-link-exact-active {
   background: rgba(37, 99, 235, 0.12);
-  color: var(--primary);
+  color: var(--accent);
 }
 
 .nav-btn:active {

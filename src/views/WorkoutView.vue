@@ -1,39 +1,39 @@
 <template>
-  <div>
-    <section v-if="!id">
+  <div class="workout-page">
+    <section v-if="!workoutId">
       <BaseCard>
         <h2>Тренировки</h2>
-        <p class="subtitle">Создавайте и редактируйте тренировки.</p>
+        <p class="subtitle">Создавайте, редактируйте и завершайте тренировки.</p>
         <BaseButton @click="startNew">Новая тренировка</BaseButton>
       </BaseCard>
 
       <section class="list-section">
         <h3>Последние</h3>
-        <div v-if="store.workouts.length === 0">Пока нет тренировок — создайте первую.</div>
-        <div v-else>
-          <WorkoutCard v-for="w in store.workouts.slice(0, 8)" :key="w.id" :workout="w" @open="open" />
+        <div v-if="store.workouts.length === 0" class="empty">Пока нет тренировок — создайте первую.</div>
+        <div v-else class="workout-list">
+          <WorkoutCard v-for="workoutCard in store.workouts.slice(0, 8)" :key="workoutCard.id" :workout="workoutCard" @open="open" />
         </div>
       </section>
     </section>
 
     <BaseCard v-else>
       <div class="header">
-        <input v-model="workout.name" placeholder="Название тренировки (например: Ноги)" />
+        <BaseInput v-model="workout.name" placeholder="Название тренировки (например: Ноги)" />
         <div class="meta">
           <small>{{ workout.date }}</small>
-          <BaseButton @click="saveDraft">Сохранить</BaseButton>
-          <BaseButton @click="completeWorkout">Завершить</BaseButton>
+          <div class="actions">
+            <BaseButton @click="saveDraft">Сохранить</BaseButton>
+            <BaseButton @click="completeWorkout">Завершить</BaseButton>
+          </div>
         </div>
       </div>
 
       <small v-if="workoutNameError" class="error">{{ workoutNameError }}</small>
 
-      <div class="exercises" style="margin-top:12px">
-        <div v-for="ex in workout.exercises" :key="ex.id">
-          <ExerciseItem :exercise="ex" />
-        </div>
+      <div class="exercises">
+        <ExerciseItem v-for="exercise in workout.exercises" :key="exercise.id" :exercise="exercise" />
 
-        <div style="margin-top:12px">
+        <div class="new-exercise-form">
           <BaseInput v-model="newExName" placeholder="Добавить упражнение" />
           <BaseButton @click="addExercise">Добавить упражнение</BaseButton>
         </div>
@@ -44,14 +44,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useWorkoutStore } from '../store/workoutStore'
 import BaseCard from '../components/ui/BaseCard.vue'
 import BaseButton from '../components/ui/BaseButton.vue'
 import BaseInput from '../components/ui/BaseInput.vue'
 import ExerciseItem from '../components/workout/ExerciseItem.vue'
+import WorkoutCard from '../components/workout/WorkoutCard.vue'
 import { useSettings } from '../composables/useSettings'
+import { useWorkoutStore } from '../store/workoutStore'
 
 function uid() {
   return `${Date.now()}-${Math.floor(Math.random() * 10000)}`
@@ -60,36 +61,74 @@ function uid() {
 const route = useRoute()
 const router = useRouter()
 const store = useWorkoutStore()
-const workoutId = route.params.id as string | undefined
-const existingWorkout = workoutId ? store.workouts.find(w => w.id === workoutId) : undefined
-const isExistingWorkout = Boolean(existingWorkout)
-const workout = ref(existingWorkout ?? store.createEmptyWorkout())
-const newExName = ref('')
 const { defaultRestSec } = useSettings()
 
-onMounted(() => {
-  if (workoutId && !existingWorkout) {
-    router.push('/')
-  }
-})
+const workoutId = computed(() => route.params.id as string | undefined)
+const workout = ref(store.createEmptyWorkout())
+const newExName = ref('')
+const workoutNameError = ref('')
+const exerciseNameError = ref('')
 
-function save() {
-  const workoutName = workout.value.name?.trim() ?? ''
-  if (!workoutName) {
-    workoutNameError.value = 'Введите название тренировки перед сохранением'
+function syncWorkout() {
+  if (!workoutId.value) {
+    workout.value = store.createEmptyWorkout()
     return
   }
 
-  workoutNameError.value = ''
-  workout.value.name = workoutName
-
-  if (isExistingWorkout) {
-    store.updateWorkout(workout.value)
-  } else {
-    store.addWorkout(workout.value)
+  const existingWorkout = store.getWorkoutById(workoutId.value)
+  if (!existingWorkout) {
+    router.replace('/workouts')
+    return
   }
 
-  router.push('/')
+  workout.value = structuredClone(existingWorkout)
+}
+
+onMounted(syncWorkout)
+watch(workoutId, syncWorkout)
+
+function startNew() {
+  const emptyWorkout = store.createEmptyWorkout()
+  store.addWorkout(emptyWorkout)
+  router.push({ name: 'Workout', params: { id: emptyWorkout.id } })
+}
+
+function open(id: string) {
+  router.push({ name: 'Workout', params: { id } })
+}
+
+function validateWorkoutName() {
+  const workoutName = workout.value.name?.trim() ?? ''
+  if (!workoutName) {
+    workoutNameError.value = 'Введите название тренировки перед сохранением'
+    return false
+  }
+
+  workout.value.name = workoutName
+  workoutNameError.value = ''
+  return true
+}
+
+function saveDraft() {
+  if (!validateWorkoutName()) {
+    return
+  }
+
+  workout.value.status = 'draft'
+  workout.value.completedAt = undefined
+  store.upsertWorkout(workout.value)
+  router.push('/workouts')
+}
+
+function completeWorkout() {
+  if (!validateWorkoutName()) {
+    return
+  }
+
+  workout.value.status = 'completed'
+  workout.value.completedAt = new Date().toISOString()
+  store.upsertWorkout(workout.value)
+  router.push('/diary')
 }
 
 function addExercise() {
@@ -101,20 +140,77 @@ function addExercise() {
 
   exerciseNameError.value = ''
 
-  const ex = {
+  workout.value.exercises.push({
     id: uid(),
-    name: newExName.value.trim(),
+    name: exerciseName,
     sets: [],
-    defaultRestSec: defaultRestSec.value
-  }
+    defaultRestSec: defaultRestSec.value,
+  })
 
-  workout.value.exercises.push(ex)
   newExName.value = ''
 }
 </script>
 
 <style scoped>
-.header { display:flex; justify-content:space-between; gap:10px; align-items:center }
-.header input { font-size:16px; padding:8px; border-radius:10px; border:1px solid rgba(0,0,0,0.08) }
-.meta { display:flex; gap:8px; align-items:center }
+.workout-page {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.subtitle {
+  opacity: 0.75;
+}
+
+.list-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.workout-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.empty {
+  opacity: 0.75;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.exercises {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.new-exercise-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.error {
+  color: #b91c1c;
+}
 </style>

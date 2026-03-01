@@ -1,10 +1,12 @@
 <template>
-  <div id="app" class="app">
-    <AppHeader />
-    <main class="page">
+  <div id="app" class="app-shell">
+    <AppHeader class="app-shell__header" />
+
+    <main class="app-shell__content">
       <router-view />
     </main>
-    <BottomNav />
+
+    <BottomNav class="app-shell__nav" />
   </div>
 </template>
 
@@ -14,16 +16,19 @@ import BottomNav from './components/layout/BottomNav.vue'
 </script>
 
 <style scoped>
-.app {
+.app-shell {
+  min-height: 100dvh;
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
   background: var(--bg);
   color: var(--text);
 }
-.page {
-  flex: 1;
-  /* space for bottom nav */
-  padding: 16px 16px 96px;
+
+.app-shell__content {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px;
+  padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px) + 20px);
 }
 </style>

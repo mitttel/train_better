@@ -4,6 +4,7 @@
   --text: #111827;
   --muted: #6b7280;
   --accent: #2563eb;
+  --bottom-nav-height: 78px;
 }
 
 *{box-sizing:border-box}
@@ -27,5 +28,8 @@ input, button, textarea { font-family: inherit; }
 
 /* small screen layout helpers */
 @media (min-width: 480px) {
-  .page { max-width:480px; margin:0 auto; }
+  #app {
+    max-width: 480px;
+    margin: 0 auto;
+  }
 }
