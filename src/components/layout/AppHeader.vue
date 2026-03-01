@@ -4,7 +4,7 @@
       <h1>Workout Journal</h1>
     </div>
     <div class="right">
-      <button @click="$router.push('/settings')">⚙️</button>
+      <button @click="$router.push('/profile')">⚙️</button>
     </div>
   </header>
 </template>
