@@ -8,6 +8,21 @@
       </div>
     </BaseCard>
 
+    <div class="kpi-grid">
+      <BaseCard>
+        <div class="kpi-item">
+          <p>Общий счёт тренировок</p>
+          <h3>{{ totalWorkouts }}</h3>
+        </div>
+      </BaseCard>
+      <BaseCard>
+        <div class="kpi-item">
+          <p>Завершённые тренировки</p>
+          <h3>{{ completedWorkouts }}</h3>
+        </div>
+      </BaseCard>
+    </div>
+
     <section style="margin-top:12px">
       <h3>Последние тренировки</h3>
       <div v-if="store.workouts.length === 0">Пока нет тренировок — начните сегодня.</div>
@@ -24,40 +39,23 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed } from 'vue'
+import BaseCard from '../components/ui/BaseCard.vue'
+import BaseButton from '../components/ui/BaseButton.vue'
 import WorkoutCard from '../components/workout/WorkoutCard.vue'
 import BaseButton from '../components/ui/BaseButton.vue'
 import BaseCard from '../components/ui/BaseCard.vue'
 import BaseInput from '../components/ui/BaseInput.vue'
 import { useWorkoutStore } from '../store/workoutStore'
 import { formatHuman, todayIso } from '../utils/date'
-import { containsByZ } from '../utils/zSearch'
+import { useRouter } from 'vue-router'
+import { completedWorkoutsCount, countWorkouts } from '../services/statsService'
 
 const store = useWorkoutStore()
 const router = useRouter()
 const today = formatHuman(todayIso())
-const quickQuery = ref('')
-
-const quickFilteredWorkouts = computed(() => {
-  const recent = store.workouts.slice(0, 5)
-
-  if (!quickQuery.value.trim()) {
-    return recent
-  }
-
-  return recent.filter((workout) => {
-    if (containsByZ(workout.name ?? '', quickQuery.value)) {
-      return true
-    }
-
-    if (containsByZ(workout.notes ?? '', quickQuery.value)) {
-      return true
-    }
-
-    return workout.exercises.some((exercise) => containsByZ(exercise.name, quickQuery.value))
-  })
-})
+const totalWorkouts = computed(() => countWorkouts(store.workouts))
+const completedWorkouts = computed(() => completedWorkoutsCount(store.workouts))
 
 function startToday() {
   const empty = store.createEmptyWorkout()
@@ -69,3 +67,26 @@ function open(id: string) {
   router.push({ name: 'Workout', params: { id } })
 }
 </script>
+
+<style scoped>
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.kpi-item {
+  text-align: center;
+}
+
+.kpi-item p {
+  margin: 0;
+  opacity: 0.75;
+}
+
+.kpi-item h3 {
+  margin: 8px 0 0;
+  font-size: 24px;
+}
+</style>

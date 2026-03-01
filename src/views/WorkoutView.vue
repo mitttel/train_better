@@ -21,7 +21,8 @@
         <input v-model="workout.name" placeholder="Название тренировки (например: Ноги)" />
         <div class="meta">
           <small>{{ workout.date }}</small>
-          <BaseButton @click="save">Сохранить</BaseButton>
+          <BaseButton @click="saveDraft">Сохранить</BaseButton>
+          <BaseButton @click="completeWorkout">Завершить</BaseButton>
         </div>
       </div>
 
@@ -47,11 +48,8 @@ import BaseCard from '../components/ui/BaseCard.vue'
 import BaseButton from '../components/ui/BaseButton.vue'
 import BaseInput from '../components/ui/BaseInput.vue'
 import ExerciseItem from '../components/workout/ExerciseItem.vue'
-import WorkoutCard from '../components/workout/WorkoutCard.vue'
 
-function uid() {
-  return `${Date.now()}-${Math.floor(Math.random() * 10000)}`
-}
+function uid() { return `${Date.now()}-${Math.floor(Math.random()*10000)}` }
 
 const route = useRoute()
 const router = useRouter()
@@ -72,13 +70,27 @@ function open(workoutId: string) {
   router.push({ name: 'Workout', params: { id: workoutId } })
 }
 
-function save() {
+function persistWorkout() {
   if (store.workouts.find(w => w.id === workout.value.id)) {
     store.updateWorkout(workout.value)
   } else {
     store.addWorkout(workout.value)
   }
-  router.push('/workouts')
+}
+
+function saveDraft() {
+  if (workout.value.status !== 'completed') {
+    workout.value.status = 'draft'
+  }
+  persistWorkout()
+  router.push('/')
+}
+
+function completeWorkout() {
+  workout.value.status = 'completed'
+  workout.value.completedAt = new Date().toISOString()
+  persistWorkout()
+  router.push('/')
 }
 
 function addExercise() {
@@ -94,32 +106,7 @@ function addExercise() {
 </script>
 
 <style scoped>
-.subtitle {
-  margin-bottom: 12px;
-  opacity: 0.75;
-}
-
-.list-section {
-  margin-top: 12px;
-}
-
-.header {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  align-items: center;
-}
-
-.header input {
-  font-size: 16px;
-  padding: 8px;
-  border-radius: 10px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-}
-
-.meta {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
+.header { display:flex; justify-content:space-between; gap:10px; align-items:center }
+.header input { font-size:16px; padding:8px; border-radius:10px; border:1px solid rgba(0,0,0,0.08) }
+.meta { display:flex; gap:8px; align-items:center; flex-wrap:wrap }
 </style>
