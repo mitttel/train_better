@@ -1,8 +1,47 @@
 import type { Workout } from '../types/workout'
 import { daysBetween } from '../utils/calculations'
 
+export function isWorkoutCompleted(workout: Workout) {
+    if (workout.status === 'completed') return true
+    if (workout.completedAt) return true
+
+    // Backward compatibility for legacy records without status.
+    return workout.exercises.some(ex =>
+        ex.sets.some(set => (set.weight ?? 0) > 0 || (set.reps ?? 0) > 0),
+    )
+}
+
 export function countWorkouts(workouts: Workout[]) {
     return workouts.length
+}
+
+export function totalLiftedWeight(workouts: Workout[]) {
+    return workouts.reduce(
+        (total, workout) =>
+            total +
+            workout.exercises.reduce(
+                (exerciseSum, exercise) =>
+                    exerciseSum +
+                    exercise.sets.reduce(
+                        (setSum, set) => setSum + (set.weight ?? 0) * (set.reps ?? 0),
+                        0,
+                    ),
+                0,
+            ),
+        0,
+    )
+}
+
+export function completedWorkoutsCount(workouts: Workout[]) {
+    return workouts.filter(isWorkoutCompleted).length
+}
+
+export function workoutsByDay(workouts: Workout[]) {
+    return workouts.reduce<Record<string, number>>((acc, workout) => {
+        if (!isWorkoutCompleted(workout)) return acc
+        acc[workout.date] = (acc[workout.date] ?? 0) + 1
+        return acc
+    }, {})
 }
 
 export function workoutsInRange(workouts: Workout[], fromIso: string, toIso: string) {
