@@ -24,9 +24,11 @@
 <style scoped>
 .bottom-nav {
   position: fixed;
-  bottom: 10px;
+  bottom: calc(10px + env(safe-area-inset-bottom, 0px));
   left: 10px;
   right: 10px;
+  max-width: 460px;
+  margin: 0 auto;
   display: flex;
   justify-content: space-around;
   gap: 6px;
@@ -38,6 +40,8 @@
 
 .nav-btn {
   display: flex;
+  flex: 1;
+  min-width: 0;
   flex-direction: column;
   align-items: center;
   gap: 2px;
@@ -47,7 +51,6 @@
   border-radius: 10px;
   text-decoration: none;
   color: var(--text);
-  min-width: 64px;
 }
 
 .icon {

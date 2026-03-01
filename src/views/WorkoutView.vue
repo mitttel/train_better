@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="workout-view">
     <section v-if="!id">
       <BaseCard>
         <h2>Тренировки</h2>
@@ -28,12 +28,12 @@
 
       <small v-if="workoutNameError" class="error">{{ workoutNameError }}</small>
 
-      <div class="exercises" style="margin-top:12px">
+      <div class="exercises">
         <div v-for="ex in workout.exercises" :key="ex.id">
           <ExerciseItem :exercise="ex" />
         </div>
 
-        <div style="margin-top:12px">
+        <div class="add-exercise">
           <BaseInput v-model="newExName" placeholder="Добавить упражнение" />
           <BaseButton @click="addExercise">Добавить упражнение</BaseButton>
         </div>
@@ -44,13 +44,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useWorkoutStore } from '../store/workoutStore'
 import BaseCard from '../components/ui/BaseCard.vue'
 import BaseButton from '../components/ui/BaseButton.vue'
 import BaseInput from '../components/ui/BaseInput.vue'
 import ExerciseItem from '../components/workout/ExerciseItem.vue'
+import WorkoutCard from '../components/workout/WorkoutCard.vue'
 import { useSettings } from '../composables/useSettings'
 
 function uid() {
@@ -60,20 +61,44 @@ function uid() {
 const route = useRoute()
 const router = useRouter()
 const store = useWorkoutStore()
-const workoutId = route.params.id as string | undefined
-const existingWorkout = workoutId ? store.workouts.find(w => w.id === workoutId) : undefined
-const isExistingWorkout = Boolean(existingWorkout)
-const workout = ref(existingWorkout ?? store.createEmptyWorkout())
-const newExName = ref('')
 const { defaultRestSec } = useSettings()
 
-onMounted(() => {
-  if (workoutId && !existingWorkout) {
-    router.push('/')
-  }
-})
+const id = computed(() => route.params.id as string | undefined)
+const workout = ref(store.createEmptyWorkout())
+const newExName = ref('')
+const workoutNameError = ref('')
+const exerciseNameError = ref('')
 
-function save() {
+function loadWorkoutByRoute() {
+  const currentId = id.value
+  if (!currentId) {
+    workout.value = store.createEmptyWorkout()
+    return
+  }
+
+  const found = store.workouts.find(w => w.id === currentId)
+  if (!found) {
+    router.replace('/workouts')
+    return
+  }
+
+  workout.value = found
+}
+
+onMounted(loadWorkoutByRoute)
+watch(id, loadWorkoutByRoute)
+
+function startNew() {
+  const draft = store.createEmptyWorkout()
+  workout.value = draft
+  router.push({ name: 'Workout', params: { id: draft.id } })
+}
+
+function open(workoutId: string) {
+  router.push({ name: 'Workout', params: { id: workoutId } })
+}
+
+function save(status: 'draft' | 'completed' = 'draft') {
   const workoutName = workout.value.name?.trim() ?? ''
   if (!workoutName) {
     workoutNameError.value = 'Введите название тренировки перед сохранением'
@@ -82,14 +107,25 @@ function save() {
 
   workoutNameError.value = ''
   workout.value.name = workoutName
+  workout.value.status = status
+  workout.value.completedAt = status === 'completed' ? new Date().toISOString() : undefined
 
-  if (isExistingWorkout) {
+  const hasExisting = store.workouts.some(w => w.id === workout.value.id)
+  if (hasExisting) {
     store.updateWorkout(workout.value)
   } else {
     store.addWorkout(workout.value)
   }
 
-  router.push('/')
+  router.push('/workouts')
+}
+
+function saveDraft() {
+  save('draft')
+}
+
+function completeWorkout() {
+  save('completed')
 }
 
 function addExercise() {
@@ -101,20 +137,65 @@ function addExercise() {
 
   exerciseNameError.value = ''
 
-  const ex = {
+  workout.value.exercises.push({
     id: uid(),
-    name: newExName.value.trim(),
+    name: exerciseName,
     sets: [],
     defaultRestSec: defaultRestSec.value
-  }
+  })
 
-  workout.value.exercises.push(ex)
   newExName.value = ''
 }
 </script>
 
 <style scoped>
-.header { display:flex; justify-content:space-between; gap:10px; align-items:center }
-.header input { font-size:16px; padding:8px; border-radius:10px; border:1px solid rgba(0,0,0,0.08) }
-.meta { display:flex; gap:8px; align-items:center }
+.subtitle {
+  margin-bottom: 12px;
+  opacity: 0.75;
+}
+
+.list-section {
+  margin-top: 12px;
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+}
+
+.header input {
+  flex: 1 1 220px;
+  width: 100%;
+  min-width: 0;
+  font-size: 16px;
+  padding: 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.exercises {
+  margin-top: 12px;
+}
+
+.add-exercise {
+  margin-top: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.error {
+  color: #dc2626;
+  margin-top: 8px;
+  display: inline-block;
+}
 </style>
