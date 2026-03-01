@@ -5,46 +5,74 @@ import { storage } from '../services/storageService'
 import { todayIso } from '../utils/date'
 
 function normalizeWorkout(workout: Partial<Workout>): Workout {
-    return {
-        id: workout.id ?? `${Date.now()}`,
-        date: workout.date ?? todayIso(),
-        name: workout.name,
-        exercises: workout.exercises ?? [],
-        notes: workout.notes,
-        status: workout.status ?? (workout.completedAt ? 'completed' : 'draft'),
-        completedAt: workout.completedAt,
-    }
+  return {
+    id: workout.id ?? `${Date.now()}`,
+    date: workout.date ?? todayIso(),
+    name: workout.name,
+    exercises: workout.exercises ?? [],
+    notes: workout.notes,
+    status: workout.status ?? (workout.completedAt ? 'completed' : 'draft'),
+    completedAt: workout.completedAt,
+  }
 }
 
 export const useWorkoutStore = defineStore('workout', () => {
-    const workouts = ref<Workout[]>((storage.load() ?? []).map(normalizeWorkout))
+  const workouts = ref<Workout[]>((storage.load() ?? []).map(normalizeWorkout))
 
-    function addWorkout(w: Workout) {
-        workouts.value.unshift(w)
-        storage.save(workouts.value)
+  function persist() {
+    storage.save(workouts.value)
+  }
+
+  function getWorkoutById(id: string) {
+    return workouts.value.find(workout => workout.id === id)
+  }
+
+  function addWorkout(workout: Workout) {
+    workouts.value.unshift(workout)
+    persist()
+  }
+
+  function updateWorkout(updatedWorkout: Workout) {
+    const index = workouts.value.findIndex(workout => workout.id === updatedWorkout.id)
+    if (index === -1) {
+      return
     }
 
-    function updateWorkout(updated: Workout) {
-        const idx = workouts.value.findIndex(w => w.id === updated.id)
-        if (idx >= 0) {
-            workouts.value[idx] = updated
-            storage.save(workouts.value)
-        }
+    workouts.value[index] = updatedWorkout
+    persist()
+  }
+
+  function upsertWorkout(workout: Workout) {
+    const existingWorkout = getWorkoutById(workout.id)
+    if (existingWorkout) {
+      updateWorkout(workout)
+      return
     }
 
-    function removeWorkout(id: string) {
-        workouts.value = workouts.value.filter(w => w.id !== id)
-        storage.save(workouts.value)
-    }
+    addWorkout(workout)
+  }
 
-    function createEmptyWorkout(): Workout {
-        return {
-            id: `${Date.now()}`,
-            date: todayIso(),
-            exercises: [],
-            status: 'draft',
-        }
-    }
+  function removeWorkout(id: string) {
+    workouts.value = workouts.value.filter(workout => workout.id !== id)
+    persist()
+  }
 
-    return { workouts, addWorkout, updateWorkout, removeWorkout, createEmptyWorkout }
+  function createEmptyWorkout(): Workout {
+    return {
+      id: `${Date.now()}`,
+      date: todayIso(),
+      exercises: [],
+      status: 'draft',
+    }
+  }
+
+  return {
+    workouts,
+    getWorkoutById,
+    addWorkout,
+    updateWorkout,
+    upsertWorkout,
+    removeWorkout,
+    createEmptyWorkout,
+  }
 })
