@@ -23,29 +23,27 @@
       </BaseCard>
     </div>
 
-    <section style="margin-top:12px">
+    <section class="recent-section">
       <h3>Последние тренировки</h3>
       <div v-if="store.workouts.length === 0">Пока нет тренировок — начните сегодня.</div>
       <div v-else>
         <BaseInput v-model="quickQuery" placeholder="Быстрый поиск" />
 
-        <div v-if="quickFilteredWorkouts.length" style="margin-top:8px">
+        <div v-if="quickFilteredWorkouts.length" class="results">
           <WorkoutCard v-for="w in quickFilteredWorkouts" :key="w.id" :workout="w" @open="open" />
         </div>
-        <div v-else style="margin-top:8px">Ничего не найдено</div>
+        <div v-else class="results">Ничего не найдено</div>
       </div>
     </section>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import BaseCard from '../components/ui/BaseCard.vue'
 import BaseButton from '../components/ui/BaseButton.vue'
-import WorkoutCard from '../components/workout/WorkoutCard.vue'
-import BaseButton from '../components/ui/BaseButton.vue'
-import BaseCard from '../components/ui/BaseCard.vue'
 import BaseInput from '../components/ui/BaseInput.vue'
+import WorkoutCard from '../components/workout/WorkoutCard.vue'
 import { useWorkoutStore } from '../store/workoutStore'
 import { formatHuman, todayIso } from '../utils/date'
 import { useRouter } from 'vue-router'
@@ -54,8 +52,18 @@ import { completedWorkoutsCount, countWorkouts } from '../services/statsService'
 const store = useWorkoutStore()
 const router = useRouter()
 const today = formatHuman(todayIso())
+const quickQuery = ref('')
+
 const totalWorkouts = computed(() => countWorkouts(store.workouts))
 const completedWorkouts = computed(() => completedWorkoutsCount(store.workouts))
+const quickFilteredWorkouts = computed(() => {
+  const query = quickQuery.value.trim().toLowerCase()
+  if (!query) return store.workouts.slice(0, 6)
+
+  return store.workouts
+    .filter(workout => (workout.name ?? '').toLowerCase().includes(query))
+    .slice(0, 6)
+})
 
 function startToday() {
   const empty = store.createEmptyWorkout()
@@ -88,5 +96,13 @@ function open(id: string) {
 .kpi-item h3 {
   margin: 8px 0 0;
   font-size: 24px;
+}
+
+.recent-section {
+  margin-top: 12px;
+}
+
+.results {
+  margin-top: 8px;
 }
 </style>
