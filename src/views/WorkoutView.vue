@@ -51,6 +51,7 @@ import BaseCard from '../components/ui/BaseCard.vue'
 import BaseButton from '../components/ui/BaseButton.vue'
 import BaseInput from '../components/ui/BaseInput.vue'
 import ExerciseItem from '../components/workout/ExerciseItem.vue'
+import { useSettings } from '../composables/useSettings'
 
 function uid() {
   return `${Date.now()}-${Math.floor(Math.random() * 10000)}`
@@ -64,8 +65,7 @@ const existingWorkout = workoutId ? store.workouts.find(w => w.id === workoutId)
 const isExistingWorkout = Boolean(existingWorkout)
 const workout = ref(existingWorkout ?? store.createEmptyWorkout())
 const newExName = ref('')
-const workoutNameError = ref('')
-const exerciseNameError = ref('')
+const { defaultRestSec } = useSettings()
 
 onMounted(() => {
   if (workoutId && !existingWorkout) {
@@ -103,8 +103,9 @@ function addExercise() {
 
   const ex = {
     id: uid(),
-    name: exerciseName,
-    sets: []
+    name: newExName.value.trim(),
+    sets: [],
+    defaultRestSec: defaultRestSec.value
   }
 
   workout.value.exercises.push(ex)
@@ -116,5 +117,4 @@ function addExercise() {
 .header { display:flex; justify-content:space-between; gap:10px; align-items:center }
 .header input { font-size:16px; padding:8px; border-radius:10px; border:1px solid rgba(0,0,0,0.08) }
 .meta { display:flex; gap:8px; align-items:center }
-.error { color: #b91c1c; display: block; margin-top: 6px; }
 </style>
