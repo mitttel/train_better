@@ -5,7 +5,7 @@
       <small v-if="exercise.notes">{{ exercise.notes }}</small>
     </div>
     <div class="sets">
-      <SetRow v-for="s in exercise.sets" :key="s.id" :set="s" />
+      <SetRow v-for="(s, idx) in exercise.sets" :key="s.id" :set="s" :index="idx + 1" />
     </div>
   </div>
 </template>

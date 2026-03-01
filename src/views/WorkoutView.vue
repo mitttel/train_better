@@ -26,6 +26,8 @@
         </div>
       </div>
 
+      <small v-if="workoutNameError" class="error">{{ workoutNameError }}</small>
+
       <div class="exercises" style="margin-top:12px">
         <div v-for="ex in workout.exercises" :key="ex.id">
           <ExerciseItem :exercise="ex" />
@@ -35,6 +37,7 @@
           <BaseInput v-model="newExName" placeholder="Добавить упражнение" />
           <BaseButton @click="addExercise">Добавить упражнение</BaseButton>
         </div>
+        <small v-if="exerciseNameError" class="error">{{ exerciseNameError }}</small>
       </div>
     </BaseCard>
   </div>
@@ -49,57 +52,61 @@ import BaseButton from '../components/ui/BaseButton.vue'
 import BaseInput from '../components/ui/BaseInput.vue'
 import ExerciseItem from '../components/workout/ExerciseItem.vue'
 
-function uid() { return `${Date.now()}-${Math.floor(Math.random()*10000)}` }
+function uid() {
+  return `${Date.now()}-${Math.floor(Math.random() * 10000)}`
+}
 
 const route = useRoute()
 const router = useRouter()
 const store = useWorkoutStore()
-const id = computed(() => route.params.id as string | undefined)
-const workout = ref(
-  id.value ? store.workouts.find(w => w.id === id.value) ?? store.createEmptyWorkout() : store.createEmptyWorkout()
-)
+const workoutId = route.params.id as string | undefined
+const existingWorkout = workoutId ? store.workouts.find(w => w.id === workoutId) : undefined
+const isExistingWorkout = Boolean(existingWorkout)
+const workout = ref(existingWorkout ?? store.createEmptyWorkout())
 const newExName = ref('')
+const workoutNameError = ref('')
+const exerciseNameError = ref('')
 
-function startNew() {
-  const empty = store.createEmptyWorkout()
-  store.addWorkout(empty)
-  router.push({ name: 'Workout', params: { id: empty.id } })
-}
+onMounted(() => {
+  if (workoutId && !existingWorkout) {
+    router.push('/')
+  }
+})
 
-function open(workoutId: string) {
-  router.push({ name: 'Workout', params: { id: workoutId } })
-}
+function save() {
+  const workoutName = workout.value.name?.trim() ?? ''
+  if (!workoutName) {
+    workoutNameError.value = 'Введите название тренировки перед сохранением'
+    return
+  }
 
-function persistWorkout() {
-  if (store.workouts.find(w => w.id === workout.value.id)) {
+  workoutNameError.value = ''
+  workout.value.name = workoutName
+
+  if (isExistingWorkout) {
     store.updateWorkout(workout.value)
   } else {
     store.addWorkout(workout.value)
   }
-}
 
-function saveDraft() {
-  if (workout.value.status !== 'completed') {
-    workout.value.status = 'draft'
-  }
-  persistWorkout()
-  router.push('/')
-}
-
-function completeWorkout() {
-  workout.value.status = 'completed'
-  workout.value.completedAt = new Date().toISOString()
-  persistWorkout()
   router.push('/')
 }
 
 function addExercise() {
-  if (!newExName.value.trim()) return
+  const exerciseName = newExName.value.trim()
+  if (!exerciseName) {
+    exerciseNameError.value = 'Название упражнения не может быть пустым'
+    return
+  }
+
+  exerciseNameError.value = ''
+
   const ex = {
     id: uid(),
-    name: newExName.value.trim(),
+    name: exerciseName,
     sets: []
   }
+
   workout.value.exercises.push(ex)
   newExName.value = ''
 }
@@ -108,5 +115,6 @@ function addExercise() {
 <style scoped>
 .header { display:flex; justify-content:space-between; gap:10px; align-items:center }
 .header input { font-size:16px; padding:8px; border-radius:10px; border:1px solid rgba(0,0,0,0.08) }
-.meta { display:flex; gap:8px; align-items:center; flex-wrap:wrap }
+.meta { display:flex; gap:8px; align-items:center }
+.error { color: #b91c1c; display: block; margin-top: 6px; }
 </style>

@@ -8,8 +8,8 @@
 
 <script setup lang="ts">
 import type { SetRow as SetRowType } from '../../types/exercise'
-const props = defineProps<{ set: SetRowType }>()
-const indexLabel = 1 // placeholder — component consumer can extend
+const props = defineProps<{ set: SetRowType, index: number }>()
+const indexLabel = props.index
 </script>
 
 <style scoped>
