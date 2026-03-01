@@ -24,11 +24,12 @@
 <style scoped>
 .bottom-nav {
   position: fixed;
-  bottom: 10px;
-  left: 10px;
-  right: 10px;
-  display: flex;
-  justify-content: space-around;
+  left: 50%;
+  bottom: calc(10px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  width: min(calc(100% - 20px), 460px);
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 6px;
   background: var(--card);
   padding: 8px;
@@ -47,7 +48,7 @@
   border-radius: 10px;
   text-decoration: none;
   color: var(--text);
-  min-width: 64px;
+  min-width: 0;
 }
 
 .icon {
@@ -57,7 +58,7 @@
 
 .nav-btn.router-link-exact-active {
   background: rgba(37, 99, 235, 0.12);
-  color: var(--primary);
+  color: var(--accent);
 }
 
 .nav-btn:active {
