@@ -105,6 +105,12 @@ function togglePause() {
 .save-set { grid-column: 1 / -1; background: var(--accent); color: white; border: none; font-weight: 600; }
 .timer { margin-top: 10px; padding: 10px; border-radius: 10px; background: rgba(37, 99, 235, 0.1); }
 .timer-title { font-weight: 700; }
-.timer-actions { margin-top: 8px; display: flex; gap: 8px; }
+.timer-actions { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px; }
 .timer-actions button { padding: 8px 10px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.18); background: white; }
+
+@media (max-width: 360px) {
+  .set-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
 </style>
