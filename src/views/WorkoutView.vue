@@ -1,6 +1,22 @@
 <template>
   <div>
-    <BaseCard>
+    <section v-if="!id">
+      <BaseCard>
+        <h2>Тренировки</h2>
+        <p class="subtitle">Создавайте и редактируйте тренировки.</p>
+        <BaseButton @click="startNew">Новая тренировка</BaseButton>
+      </BaseCard>
+
+      <section class="list-section">
+        <h3>Последние</h3>
+        <div v-if="store.workouts.length === 0">Пока нет тренировок — создайте первую.</div>
+        <div v-else>
+          <WorkoutCard v-for="w in store.workouts.slice(0, 8)" :key="w.id" :workout="w" @open="open" />
+        </div>
+      </section>
+    </section>
+
+    <BaseCard v-else>
       <div class="header">
         <input v-model="workout.name" placeholder="Название тренировки (например: Ноги)" />
         <div class="meta">
@@ -25,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useWorkoutStore } from '../store/workoutStore'
 import BaseCard from '../components/ui/BaseCard.vue'
@@ -38,15 +54,21 @@ function uid() { return `${Date.now()}-${Math.floor(Math.random()*10000)}` }
 const route = useRoute()
 const router = useRouter()
 const store = useWorkoutStore()
-const id = route.params.id as string | undefined
-const workout = ref(store.workouts.find(w => w.id === id) ?? store.createEmptyWorkout())
+const id = computed(() => route.params.id as string | undefined)
+const workout = ref(
+  id.value ? store.workouts.find(w => w.id === id.value) ?? store.createEmptyWorkout() : store.createEmptyWorkout()
+)
 const newExName = ref('')
 
-onMounted(() => {
-  if (!workout.value) {
-    router.push('/')
-  }
-})
+function startNew() {
+  const empty = store.createEmptyWorkout()
+  store.addWorkout(empty)
+  router.push({ name: 'Workout', params: { id: empty.id } })
+}
+
+function open(workoutId: string) {
+  router.push({ name: 'Workout', params: { id: workoutId } })
+}
 
 function persistWorkout() {
   if (store.workouts.find(w => w.id === workout.value.id)) {

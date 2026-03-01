@@ -27,7 +27,12 @@
       <h3>Последние тренировки</h3>
       <div v-if="store.workouts.length === 0">Пока нет тренировок — начните сегодня.</div>
       <div v-else>
-        <WorkoutCard v-for="w in store.workouts.slice(0,5)" :key="w.id" :workout="w" @open="open" />
+        <BaseInput v-model="quickQuery" placeholder="Быстрый поиск" />
+
+        <div v-if="quickFilteredWorkouts.length" style="margin-top:8px">
+          <WorkoutCard v-for="w in quickFilteredWorkouts" :key="w.id" :workout="w" @open="open" />
+        </div>
+        <div v-else style="margin-top:8px">Ничего не найдено</div>
       </div>
     </section>
   </div>
@@ -38,6 +43,9 @@ import { computed } from 'vue'
 import BaseCard from '../components/ui/BaseCard.vue'
 import BaseButton from '../components/ui/BaseButton.vue'
 import WorkoutCard from '../components/workout/WorkoutCard.vue'
+import BaseButton from '../components/ui/BaseButton.vue'
+import BaseCard from '../components/ui/BaseCard.vue'
+import BaseInput from '../components/ui/BaseInput.vue'
 import { useWorkoutStore } from '../store/workoutStore'
 import { formatHuman, todayIso } from '../utils/date'
 import { useRouter } from 'vue-router'
