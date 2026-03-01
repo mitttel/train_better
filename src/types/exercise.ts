@@ -3,6 +3,7 @@ export interface SetRow {
     reps: number
     weight?: number
     restSec?: number
+    completedAt?: string
 }
 
 export interface Exercise {
@@ -10,4 +11,5 @@ export interface Exercise {
     name: string
     sets: SetRow[]
     notes?: string
+    defaultRestSec?: number
 }

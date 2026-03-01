@@ -31,7 +31,7 @@ import BaseCard from '../components/ui/BaseCard.vue'
 import BaseButton from '../components/ui/BaseButton.vue'
 import BaseInput from '../components/ui/BaseInput.vue'
 import ExerciseItem from '../components/workout/ExerciseItem.vue'
-import { v4 as uuidv4 } from 'uuid' // note: if not installed, can use Date.now()
+import { useSettings } from '../composables/useSettings'
 
 // Fallback simple uuid if uuid package not installed:
 function uid() { return `${Date.now()}-${Math.floor(Math.random()*10000)}` }
@@ -42,6 +42,7 @@ const store = useWorkoutStore()
 const id = route.params.id as string | undefined
 const workout = ref(store.workouts.find(w => w.id === id) ?? store.createEmptyWorkout())
 const newExName = ref('')
+const { defaultRestSec } = useSettings()
 
 onMounted(() => {
   if (!workout.value) {
@@ -63,7 +64,8 @@ function addExercise() {
   const ex = {
     id: uid(),
     name: newExName.value.trim(),
-    sets: []
+    sets: [],
+    defaultRestSec: defaultRestSec.value
   }
   workout.value.exercises.push(ex)
   newExName.value = ''
