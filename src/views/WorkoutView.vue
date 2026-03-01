@@ -1,11 +1,28 @@
 <template>
   <div>
-    <BaseCard>
+    <section v-if="!id">
+      <BaseCard>
+        <h2>Тренировки</h2>
+        <p class="subtitle">Создавайте и редактируйте тренировки.</p>
+        <BaseButton @click="startNew">Новая тренировка</BaseButton>
+      </BaseCard>
+
+      <section class="list-section">
+        <h3>Последние</h3>
+        <div v-if="store.workouts.length === 0">Пока нет тренировок — создайте первую.</div>
+        <div v-else>
+          <WorkoutCard v-for="w in store.workouts.slice(0, 8)" :key="w.id" :workout="w" @open="open" />
+        </div>
+      </section>
+    </section>
+
+    <BaseCard v-else>
       <div class="header">
         <input v-model="workout.name" placeholder="Название тренировки (например: Ноги)" />
         <div class="meta">
           <small>{{ workout.date }}</small>
-          <BaseButton @click="save">Сохранить</BaseButton>
+          <BaseButton @click="saveDraft">Сохранить</BaseButton>
+          <BaseButton @click="completeWorkout">Завершить</BaseButton>
         </div>
       </div>
 
@@ -27,7 +44,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useWorkoutStore } from '../store/workoutStore'
 import BaseCard from '../components/ui/BaseCard.vue'
