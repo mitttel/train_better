@@ -1,6 +1,22 @@
 <template>
   <div>
-    <BaseCard>
+    <section v-if="!id">
+      <BaseCard>
+        <h2>Тренировки</h2>
+        <p class="subtitle">Создавайте и редактируйте тренировки.</p>
+        <BaseButton @click="startNew">Новая тренировка</BaseButton>
+      </BaseCard>
+
+      <section class="list-section">
+        <h3>Последние</h3>
+        <div v-if="store.workouts.length === 0">Пока нет тренировок — создайте первую.</div>
+        <div v-else>
+          <WorkoutCard v-for="w in store.workouts.slice(0, 8)" :key="w.id" :workout="w" @open="open" />
+        </div>
+      </section>
+    </section>
+
+    <BaseCard v-else>
       <div class="header">
         <input v-model="workout.name" placeholder="Название тренировки (например: Ноги)" />
         <div class="meta">
@@ -24,30 +40,37 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useWorkoutStore } from '../store/workoutStore'
 import BaseCard from '../components/ui/BaseCard.vue'
 import BaseButton from '../components/ui/BaseButton.vue'
 import BaseInput from '../components/ui/BaseInput.vue'
 import ExerciseItem from '../components/workout/ExerciseItem.vue'
-import { v4 as uuidv4 } from 'uuid' // note: if not installed, can use Date.now()
+import WorkoutCard from '../components/workout/WorkoutCard.vue'
 
-// Fallback simple uuid if uuid package not installed:
-function uid() { return `${Date.now()}-${Math.floor(Math.random()*10000)}` }
+function uid() {
+  return `${Date.now()}-${Math.floor(Math.random() * 10000)}`
+}
 
 const route = useRoute()
 const router = useRouter()
 const store = useWorkoutStore()
-const id = route.params.id as string | undefined
-const workout = ref(store.workouts.find(w => w.id === id) ?? store.createEmptyWorkout())
+const id = computed(() => route.params.id as string | undefined)
+const workout = ref(
+  id.value ? store.workouts.find(w => w.id === id.value) ?? store.createEmptyWorkout() : store.createEmptyWorkout()
+)
 const newExName = ref('')
 
-onMounted(() => {
-  if (!workout.value) {
-    router.push('/')
-  }
-})
+function startNew() {
+  const empty = store.createEmptyWorkout()
+  store.addWorkout(empty)
+  router.push({ name: 'Workout', params: { id: empty.id } })
+}
+
+function open(workoutId: string) {
+  router.push({ name: 'Workout', params: { id: workoutId } })
+}
 
 function save() {
   if (store.workouts.find(w => w.id === workout.value.id)) {
@@ -55,7 +78,7 @@ function save() {
   } else {
     store.addWorkout(workout.value)
   }
-  router.push('/')
+  router.push('/workouts')
 }
 
 function addExercise() {
@@ -71,7 +94,32 @@ function addExercise() {
 </script>
 
 <style scoped>
-.header { display:flex; justify-content:space-between; gap:10px; align-items:center }
-.header input { font-size:16px; padding:8px; border-radius:10px; border:1px solid rgba(0,0,0,0.08) }
-.meta { display:flex; gap:8px; align-items:center }
+.subtitle {
+  margin-bottom: 12px;
+  opacity: 0.75;
+}
+
+.list-section {
+  margin-top: 12px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+}
+
+.header input {
+  font-size: 16px;
+  padding: 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
 </style>

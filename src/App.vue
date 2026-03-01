@@ -24,6 +24,6 @@ import BottomNav from './components/layout/BottomNav.vue'
 .page {
   flex: 1;
   /* space for bottom nav */
-  padding: 16px 16px 80px;
+  padding: 16px 16px 96px;
 }
 </style>
