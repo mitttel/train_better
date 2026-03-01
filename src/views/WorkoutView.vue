@@ -5,7 +5,8 @@
         <input v-model="workout.name" placeholder="Название тренировки (например: Ноги)" />
         <div class="meta">
           <small>{{ workout.date }}</small>
-          <BaseButton @click="save">Сохранить</BaseButton>
+          <BaseButton @click="saveDraft">Сохранить</BaseButton>
+          <BaseButton @click="completeWorkout">Завершить</BaseButton>
         </div>
       </div>
 
@@ -31,9 +32,7 @@ import BaseCard from '../components/ui/BaseCard.vue'
 import BaseButton from '../components/ui/BaseButton.vue'
 import BaseInput from '../components/ui/BaseInput.vue'
 import ExerciseItem from '../components/workout/ExerciseItem.vue'
-import { v4 as uuidv4 } from 'uuid' // note: if not installed, can use Date.now()
 
-// Fallback simple uuid if uuid package not installed:
 function uid() { return `${Date.now()}-${Math.floor(Math.random()*10000)}` }
 
 const route = useRoute()
@@ -49,12 +48,26 @@ onMounted(() => {
   }
 })
 
-function save() {
+function persistWorkout() {
   if (store.workouts.find(w => w.id === workout.value.id)) {
     store.updateWorkout(workout.value)
   } else {
     store.addWorkout(workout.value)
   }
+}
+
+function saveDraft() {
+  if (workout.value.status !== 'completed') {
+    workout.value.status = 'draft'
+  }
+  persistWorkout()
+  router.push('/')
+}
+
+function completeWorkout() {
+  workout.value.status = 'completed'
+  workout.value.completedAt = new Date().toISOString()
+  persistWorkout()
   router.push('/')
 }
 
@@ -73,5 +86,5 @@ function addExercise() {
 <style scoped>
 .header { display:flex; justify-content:space-between; gap:10px; align-items:center }
 .header input { font-size:16px; padding:8px; border-radius:10px; border:1px solid rgba(0,0,0,0.08) }
-.meta { display:flex; gap:8px; align-items:center }
+.meta { display:flex; gap:8px; align-items:center; flex-wrap:wrap }
 </style>
